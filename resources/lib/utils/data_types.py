@@ -11,6 +11,7 @@
 from collections import OrderedDict
 
 import resources.lib.common as common
+from resources.lib.globals import G
 
 from .api_paths import resolve_refs
 from .logging import LOG
@@ -159,6 +160,7 @@ class VideoListSorted:
                 # self.artitem = next(self.videos.values())
                 self.artitem = list(self.videos.values())[0]
                 self.contained_titles = _get_titles(self.videos)
+                _remove_obsolete_next_page(self.perpetual_range_selector, self.videos)
 
     def __getitem__(self, key):
         return _check_sentinel(self.data_lists[key])
@@ -342,3 +344,10 @@ def _filterout_loco_contexts(root_id, data, contexts):
             continue
         del data['lists'][list_id]
         del data['locos'][root_id][str(index)]
+
+
+def _remove_obsolete_next_page(perpetual_range_selector, entries):
+    if perpetual_range_selector and entries and 'next_start' in perpetual_range_selector:
+        page_results = int(G.ADDON.getSettingInt('page_results'))
+        if len(entries) < page_results:
+            perpetual_range_selector.pop('next_start', None)
